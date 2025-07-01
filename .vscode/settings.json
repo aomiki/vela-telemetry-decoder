@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "communication.h": "c",
+        "compare": "c",
+        "cstdint": "c"
+    }
+}
