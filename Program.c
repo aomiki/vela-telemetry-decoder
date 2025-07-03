@@ -76,27 +76,18 @@ void system_area_to_str(char* msg, SystemArea area)
 
 int main()
 {
-	const uint16_t PAYLOAD_SIZE = 39;
-	uint8_t payload[PAYLOAD_SIZE];
+	uint8_t payload[TELEMETRY_BYTES_SIZE];
 	Telemetry decoded;
 
 	while (true)
 	{
-		memset(payload, 0, PAYLOAD_SIZE);
+		memset(payload, 0, TELEMETRY_BYTES_SIZE);
 
-		if(fread(payload, 1, PAYLOAD_SIZE, stdin) == PAYLOAD_SIZE)
+		if(fread(payload, 1, TELEMETRY_BYTES_SIZE, stdin) == TELEMETRY_BYTES_SIZE)
 		{
-			set_default_telemetry(&decoded);
 			uint32_t time_ms;
-			memcpy(&time_ms,                payload,        4);
-			memcpy(&decoded.sys_state,      payload + 3,    1);
-			memcpy(&decoded.sys_area,       payload + 4,    1);
-			memcpy(&decoded.temp,           payload + 5,    4);
-			memcpy(&decoded.pressure,       payload + 9,    4);
-			memcpy(&decoded.acc_x,          payload + 13,   8);
-			memcpy(&decoded.acc_y,          payload + 21,   8);
-			memcpy(&decoded.acc_z,          payload + 29,   8);
-			memcpy(&decoded.sys_status,     payload + 37,   1);
+			set_default_telemetry(&decoded);
+			bytes_to_telemetry(&decoded, &time_ms, payload);
 
 			char str_state[32];
 			system_state_to_str(str_state, decoded.sys_state);
