@@ -73,6 +73,10 @@ void system_area_to_str(char* msg, SystemArea area)
 	}
 }
 
+#define PERIPH_STR_ON "\x1b[48;2;62;161;105mON\x1b[0m"
+#define PERIPH_STR_OFF "\x1b[48;2;255;66;120mOFF\x1b[0m"
+
+#define PERIPH_BIT_TO_STR(BIT_SEQUENCE, BIT_MASK) ( ((BIT_SEQUENCE) & (BIT_MASK)) != 0? PERIPH_STR_ON : PERIPH_STR_OFF )
 
 int main()
 {
@@ -95,11 +99,20 @@ int main()
 			char str_area[32];
 			system_area_to_str(str_area, decoded.sys_area);
 
-			printf("ms: %lu / state: %s / area: %s / temp: %f / pressure: %f / acc: (%f, %f, %f) \n", time_ms, str_state, str_area, decoded.temp, decoded.pressure, decoded.acc_x, decoded.acc_y, decoded.acc_z);
+			printf("\x1b[48;2;89;123;202m ms: %lu / state: %s / area: %s / temp: %f / pressure: %f / altitude: %f / acc: (%.4f, %.4f, %.4f)\x1b[0m\n", time_ms, str_state, str_area, decoded.temp, decoded.pressure, decoded.altitude, decoded.acc_x, decoded.acc_y, decoded.acc_z);
+			printf("periperals | radio: %s / sd: %s / barom: %s / acc: %s / gps: %s / jumper: %s / servo: %s\n\n",
+				PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_RADIO),
+				PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_SD),
+				PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_BAROM),
+				PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_ACC),
+				PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_GPS),
+				PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_JUMPER),
+				PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_SERVO)
+			);
 		}
 		else
 		{
-			printf("package dropped!");
+			printf("package dropped!\n");
 		}
 		
 	}
