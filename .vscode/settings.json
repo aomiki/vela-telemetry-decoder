@@ -4,6 +4,7 @@
         "compare": "c",
         "cstdint": "c",
         "system_types.h": "c",
-        "communication_types.h": "c"
+        "communication_types.h": "c",
+        "errno.h": "c"
     }
 }
