@@ -87,6 +87,7 @@ typedef enum
 } State;
 
 bool is_prev_skip = false;
+uint32_t bytes_skipped = 0;
 
 int main()
 {
@@ -97,13 +98,17 @@ int main()
 	while (true)
 	{
 		uint8_t curr_char = 0;
+		fflush(stdout);
 		if (fread(&curr_char, 1, 1, stdin) != 1)
 		{
+			bytes_skipped++;
 			if (!is_prev_skip)
 			{
-				printf("_skip_\n\n");
+				printf("__skip:\n");
 				is_prev_skip = true;
 			}
+
+			printf("\r%i bytes", bytes_skipped);
 		}
 
 		if (curr_state == STATE_UKNOWN)
@@ -115,11 +120,14 @@ int main()
 			else
 			{
 				curr_state = STATE_UKNOWN;
+				bytes_skipped++;
 				if (!is_prev_skip)
 				{
-					printf("_skip_\n\n");
+					printf("__skip:\n");
 					is_prev_skip = true;
 				}
+
+				printf("\r%i bytes", bytes_skipped);
 			}
 		}
 		else if(curr_state == STATE_ID_FIRST)
@@ -131,11 +139,14 @@ int main()
 			else
 			{
 				curr_state = STATE_UKNOWN;
+				bytes_skipped++;
 				if (!is_prev_skip)
 				{
-					printf("_skip_\n\n");
+					printf("__skip:\n");
 					is_prev_skip = true;
 				}
+
+				printf("\r%i bytes", bytes_skipped);
 			}
 		}
 		else if(curr_state == STATE_ID_SECOND)
@@ -165,6 +176,12 @@ int main()
 				str_id[2] = '\0';
 
 				is_prev_skip = false;
+				if (bytes_skipped != 0)
+				{
+					printf("\n\n");
+				}
+
+				bytes_skipped = 0;
 				printf("\x1b[48;2;89;123;202m / id: %s / ms: %lu \x1b[48;2;184;55;177m/ state: %s /\x1b[0m\x1b[48;2;89;123;202m area: %s / temp: %f / pressure: %f / altitude: %f / acc: (%.4f, %.4f, %.4f) / gps: (alt %.4f, lat %.4f, lon %.4f)\x1b[0m\n", str_id, time_ms, str_state, str_area, decoded.temp, decoded.pressure, decoded.altitude, decoded.acc_x, decoded.acc_y, decoded.acc_z, decoded.gps.altitude, decoded.gps.latitude, decoded.gps.longitude);
 				printf("peripherals | radio: %s / sd: %s / barom: %s / acc: %s / gps: %s / jumper: %s / servo: %s\n\n",
 					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_RADIO),
@@ -178,7 +195,7 @@ int main()
 			}
 			else
 			{
-				printf("package dropped!\n");
+				printf("incomplete package dropped!\n\n");
 			}
 
 			curr_state = STATE_UKNOWN;
