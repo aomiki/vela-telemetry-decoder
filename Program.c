@@ -182,7 +182,8 @@ int main()
 				}
 
 				bytes_skipped = 0;
-				printf("\x1b[48;2;89;123;202m / id: %s / ms: %lu \x1b[48;2;184;55;177m/ state: %s /\x1b[0m\x1b[48;2;89;123;202m area: %s / temp: %f / pressure: %f / altitude: %f / acc: (%.4f, %.4f, %.4f) / gps: (alt %.4f, lat %.4f, lon %.4f)\x1b[0m\n", str_id, time_ms, str_state, str_area, decoded.temp, decoded.pressure, decoded.altitude, decoded.acc_x, decoded.acc_y, decoded.acc_z, decoded.gps.altitude, decoded.gps.latitude, decoded.gps.longitude);
+				printf("\x1b[48;2;89;123;202m / id: %s / ms: %lu \x1b[48;2;184;55;177m/ state: %s /\x1b[0m\x1b[48;2;89;123;202m area: %s / temp: %f / pressure: %f / altitude: %f / acc: (%.4f, %.4f, %.4f) / gyro: (%.4f, %.4f, %.4f) / gps: (alt %.4f, lat %.4f, lon %.4f, fix: %.4f, sat: %.4f)\x1b[0m\n",
+					str_id, time_ms, str_state, str_area, decoded.temp, decoded.pressure, decoded.altitude, decoded.acc_x, decoded.acc_y, decoded.acc_z, decoded.acc_angular_x, decoded.acc_angular_y, decoded.acc_angular_z, decoded.gps.altitude, decoded.gps.latitude, decoded.gps.longitude, decoded.gps.fix_status, decoded.gps.satellites);
 				printf("peripherals | radio: %s / sd: %s / barom: %s / acc: %s / gps: %s / jumper: %s / servo: %s\n\n",
 					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_RADIO),
 					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_SD),
