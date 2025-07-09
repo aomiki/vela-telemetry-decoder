@@ -78,7 +78,7 @@ void system_area_to_str(char* msg, SystemArea area)
 #define PERIPH_STR_OFF "\x1b[48;2;255;66;120mOFF\x1b[0m"
 
 #define PERIPH_BIT_TO_STR(BIT_SEQUENCE, BIT_MASK) ( ((BIT_SEQUENCE) & (BIT_MASK)) != 0? PERIPH_STR_ON : PERIPH_STR_OFF )
-
+#define RADIO_PACKAGE_SIZE TELEMETRY_BYTES_SIZE+1
 typedef enum
 {
 	STATE_UKNOWN,
@@ -91,7 +91,7 @@ uint32_t bytes_skipped = 0;
 
 int main()
 {
-	uint8_t payload[TELEMETRY_BYTES_SIZE];
+	uint8_t payload[RADIO_PACKAGE_SIZE];
 	Telemetry decoded;
 	State curr_state = STATE_UKNOWN;
 
@@ -113,7 +113,7 @@ int main()
 
 		if (curr_state == STATE_UKNOWN)
 		{
-			if(curr_char == TELEMETRY_ID_UPPER)
+			if(curr_char == 'R')
 			{
 				curr_state = STATE_ID_FIRST;
 			}
@@ -132,7 +132,7 @@ int main()
 		}
 		else if(curr_state == STATE_ID_FIRST)
 		{
-			if(curr_char == TELEMETRY_ID_LOWER)
+			if(curr_char == '6')
 			{
 				curr_state = STATE_ID_SECOND;
 			}
@@ -151,13 +151,13 @@ int main()
 		}
 		else if(curr_state == STATE_ID_SECOND)
 		{
-			memset(payload, 0, TELEMETRY_BYTES_SIZE);
+			memset(payload, 0, RADIO_PACKAGE_SIZE);
 			//from previous iterations
-			payload[0] = TELEMETRY_ID_UPPER;
-			payload[1] = TELEMETRY_ID_LOWER;
+			payload[0] = 'R';
+			payload[1] = '6';
 			payload[2] = curr_char;
 		
-			if(fread(payload+3, 1, TELEMETRY_BYTES_SIZE-3, stdin) == TELEMETRY_BYTES_SIZE-3)
+			if(fread(payload+3, 1, RADIO_PACKAGE_SIZE-3, stdin) == RADIO_PACKAGE_SIZE-3)
 			{
 				uint32_t time_ms;
 				uint16_t received_id = 0;
@@ -181,9 +181,11 @@ int main()
 					printf("\n\n");
 				}
 
+				uint8_t rssi = payload[RADIO_PACKAGE_SIZE-1];
+
 				bytes_skipped = 0;
-				printf("\x1b[48;2;89;123;202m / id: %s / ms: %lu \x1b[48;2;184;55;177m/ state: %s /\x1b[0m\x1b[48;2;89;123;202m area: %s / temp: %f / pressure: %f / altitude: %f / acc: (%.4f, %.4f, %.4f) / gyro: (%.4f, %.4f, %.4f) / gps: (alt %.4f, lat %.4f, lon %.4f, fix: %.4f, sat: %.4f)\x1b[0m\n",
-					str_id, time_ms, str_state, str_area, decoded.temp, decoded.pressure, decoded.altitude, decoded.acc_x, decoded.acc_y, decoded.acc_z, decoded.acc_angular_x, decoded.acc_angular_y, decoded.acc_angular_z, decoded.gps.altitude, decoded.gps.latitude, decoded.gps.longitude, decoded.gps.fix_status, decoded.gps.satellites);
+				printf("\x1b[48;2;89;123;202m / RSSI: %i / id: %s / ms: %lu \x1b[48;2;184;55;177m/ state: %s /\x1b[0m\x1b[48;2;89;123;202m area: %s / temp: %f / pressure: %f / altitude: %f / acc: (%.4f, %.4f, %.4f) / gyro: (%.4f, %.4f, %.4f) / gps: (alt %.4f, lat %.4f, lon %.4f, fix: %.4f, sat: %.4f)\x1b[0m\n",
+					 rssi, str_id, time_ms, str_state, str_area, decoded.temp, decoded.pressure, decoded.altitude, decoded.acc_x, decoded.acc_y, decoded.acc_z, decoded.acc_angular_x, decoded.acc_angular_y, decoded.acc_angular_z, decoded.gps.altitude, decoded.gps.latitude, decoded.gps.longitude, decoded.gps.fix_status, decoded.gps.satellites);
 				printf("peripherals | radio: %s / sd: %s / barom: %s / acc: %s / gps: %s / jumper: %s / servo: %s\n\n",
 					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_RADIO),
 					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_SD),
