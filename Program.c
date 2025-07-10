@@ -79,6 +79,7 @@ void system_area_to_str(char* msg, SystemArea area)
 
 #define PERIPH_BIT_TO_STR(BIT_SEQUENCE, BIT_MASK) ( ((BIT_SEQUENCE) & (BIT_MASK)) != 0? PERIPH_STR_ON : PERIPH_STR_OFF )
 #define RADIO_PACKAGE_SIZE TELEMETRY_BYTES_SIZE+1
+
 typedef enum
 {
 	STATE_UKNOWN,
@@ -89,9 +90,18 @@ typedef enum
 bool is_prev_skip = false;
 uint32_t bytes_skipped = 0;
 
-int main()
+int main(int argc, char *argv[])
 {
 	uint8_t payload[RADIO_PACKAGE_SIZE];
+	
+	uint8_t byte_num_to_read = RADIO_PACKAGE_SIZE;
+	bool is_radio = true;
+	if (argc > 1 && !strcmp(argv[1], "--no-radio"))
+	{
+		byte_num_to_read--;
+		is_radio = false;
+	}
+
 	Telemetry decoded;
 	State curr_state = STATE_UKNOWN;
 
@@ -157,7 +167,7 @@ int main()
 			payload[1] = '6';
 			payload[2] = curr_char;
 		
-			if(fread(payload+3, 1, RADIO_PACKAGE_SIZE-3, stdin) == RADIO_PACKAGE_SIZE-3)
+			if(fread(payload+3, 1, byte_num_to_read-3, stdin) == byte_num_to_read-3)
 			{
 				uint32_t time_ms;
 				uint16_t received_id = 0;
@@ -181,11 +191,16 @@ int main()
 					printf("\n\n");
 				}
 
-				uint8_t rssi = payload[RADIO_PACKAGE_SIZE-1];
-
 				bytes_skipped = 0;
-				printf("\x1b[48;2;89;123;202m / RSSI: %i / id: %s / ms: %lu \x1b[48;2;184;55;177m/ state: %s /\x1b[0m\x1b[48;2;89;123;202m area: %s / temp: %f / pressure: %f / altitude: %f / acc: (%.4f, %.4f, %.4f) / gyro: (%.4f, %.4f, %.4f) / gps: (alt %.4f, lat %.4f, lon %.4f, fix: %.4f, sat: %.4f)\x1b[0m\n",
-					 rssi, str_id, time_ms, str_state, str_area, decoded.temp, decoded.pressure, decoded.altitude, decoded.acc_x, decoded.acc_y, decoded.acc_z, decoded.acc_angular_x, decoded.acc_angular_y, decoded.acc_angular_z, decoded.gps.altitude, decoded.gps.latitude, decoded.gps.longitude, decoded.gps.fix_status, decoded.gps.satellites);
+
+				printf("\x1b[48;2;89;123;202m");
+				if(is_radio)
+				{
+					uint8_t rssi = payload[RADIO_PACKAGE_SIZE-1];
+					printf("/ RSSI: %i ", rssi);
+				}
+				printf("/ id: %s / ms: %lu \x1b[48;2;184;55;177m/ state: %s /\x1b[0m\x1b[48;2;89;123;202m area: %s / temp: %f / pressure: %f / altitude: %f / acc: (%.4f, %.4f, %.4f) / gyro: (%.4f, %.4f, %.4f) / gps: (alt %.4f, lat %.4f, lon %.4f, fix: %.4f, sat: %.4f)\x1b[0m\n",
+					 str_id, time_ms, str_state, str_area, decoded.temp, decoded.pressure, decoded.altitude, decoded.acc_x, decoded.acc_y, decoded.acc_z, decoded.acc_angular_x, decoded.acc_angular_y, decoded.acc_angular_z, decoded.gps.altitude, decoded.gps.latitude, decoded.gps.longitude, decoded.gps.fix_status, decoded.gps.satellites);
 				printf("peripherals | radio: %s / sd: %s / barom: %s / acc: %s / gps: %s / jumper: %s / servo: %s\n\n",
 					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_RADIO),
 					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_SD),
