@@ -113,7 +113,7 @@ int main()
 
 		if (curr_state == STATE_UKNOWN)
 		{
-			if(curr_char == 'R')
+			if(curr_char == TELEMETRY_ID_UPPER)
 			{
 				curr_state = STATE_ID_FIRST;
 			}
@@ -132,7 +132,7 @@ int main()
 		}
 		else if(curr_state == STATE_ID_FIRST)
 		{
-			if(curr_char == '6')
+			if(curr_char == TELEMETRY_ID_LOWER)
 			{
 				curr_state = STATE_ID_SECOND;
 			}
@@ -153,8 +153,8 @@ int main()
 		{
 			memset(payload, 0, RADIO_PACKAGE_SIZE);
 			//from previous iterations
-			payload[0] = 'R';
-			payload[1] = '6';
+			payload[0] = TELEMETRY_ID_UPPER;
+			payload[1] = TELEMETRY_ID_LOWER;
 			payload[2] = curr_char;
 		
 			if(fread(payload+3, 1, RADIO_PACKAGE_SIZE-3, stdin) == RADIO_PACKAGE_SIZE-3)
@@ -166,10 +166,10 @@ int main()
 				bytes_to_telemetry(&decoded, &time_ms, &received_id, payload);
 
 				char str_state[32];
-				system_state_to_str(str_state, decoded.sys_state);
+				//system_state_to_str(str_state, decoded.sys_state);
 
 				char str_area[32];
-				system_area_to_str(str_area, decoded.sys_area);
+				//system_area_to_str(str_area, decoded.sys_area);
 
 				char str_id[3];
 				memcpy(str_id, &received_id, 2);
@@ -184,17 +184,8 @@ int main()
 				uint8_t rssi = payload[RADIO_PACKAGE_SIZE-1];
 
 				bytes_skipped = 0;
-				printf("\x1b[48;2;89;123;202m / RSSI: %i / id: %s / ms: %lu \x1b[48;2;184;55;177m/ state: %s /\x1b[0m\x1b[48;2;89;123;202m area: %s / temp: %f / pressure: %f / altitude: %f / acc: (%.4f, %.4f, %.4f) / gyro: (%.4f, %.4f, %.4f) / gps: (alt %.4f, lat %.4f, lon %.4f, fix: %.4f, sat: %.4f)\x1b[0m\n",
-					 rssi, str_id, time_ms, str_state, str_area, decoded.temp, decoded.pressure, decoded.altitude, decoded.acc_x, decoded.acc_y, decoded.acc_z, decoded.acc_angular_x, decoded.acc_angular_y, decoded.acc_angular_z, decoded.gps.altitude, decoded.gps.latitude, decoded.gps.longitude, decoded.gps.fix_status, decoded.gps.satellites);
-				printf("peripherals | radio: %s / sd: %s / barom: %s / acc: %s / gps: %s / jumper: %s / servo: %s\n\n",
-					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_RADIO),
-					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_SD),
-					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_BAROM),
-					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_ACC),
-					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_GPS),
-					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_JUMPER),
-					PERIPH_BIT_TO_STR(decoded.sys_status, PERIPH_SERVO)
-				);
+				printf("\x1b[48;2;89;123;202m / RSSI: %i / id:%s / num: %i / time: %i \x1b[48;2;184;55;177m/ status: %i /\x1b[0m\x1b[48;2;89;123;202m mag: (%.4f, %.4f, %.4f) / acc: (%.4f, %.4f, %.4f) / gyro: (%.4f, %.4f, %.4f) / pressure: %f / temp: %f / humidity: %f / altitude; %f / gps: (lat %.4f, lon %.4f)\x1b[0m\n\n",
+					 rssi, str_id, decoded.num_pkg, time_ms, decoded.status, decoded.mag_x, decoded.mag_y, decoded.mag_z, decoded.acc_x, decoded.acc_y, decoded.acc_z, decoded.gyro_x, decoded.gyro_y, decoded.gyro_z, decoded.pressure, decoded.temp, decoded.humidity, decoded.altitude, decoded.gps_latitude, decoded.gps_longitude);
 			}
 			else
 			{
